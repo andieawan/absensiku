@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 import io
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Float
@@ -208,37 +208,28 @@ def get_db():
 # API Endpoints - Kelas
 # ====================
 @app.get("/api/kelas", response_model=List[KelasSchema])
-def get_kelas(db: Session = None):
+def get_kelas(db: Session = Depends(get_db)):
     """Get all kelas"""
-    if db is None:
-        db = SessionLocal()
     kelas_list = db.query(Kelas).all()
-    db.close()
     return kelas_list
 
 
 @app.get("/api/kelas/{kelas_id}", response_model=KelasSchema)
-def get_kelas_by_id(kelas_id: int, db: Session = None):
+def get_kelas_by_id(kelas_id: int, db: Session = Depends(get_db)):
     """Get kelas by ID"""
-    if db is None:
-        db = SessionLocal()
     kelas = db.query(Kelas).filter(Kelas.id == kelas_id).first()
-    db.close()
     if not kelas:
         raise HTTPException(status_code=404, detail="Kelas tidak ditemukan")
     return kelas
 
 
 @app.post("/api/kelas")
-def create_kelas(nama_kelas: str = Form(...), sekolah: str = Form(...), db: Session = None):
+def create_kelas(nama_kelas: str = Form(...), sekolah: str = Form(...), db: Session = Depends(get_db)):
     """Create new kelas"""
-    if db is None:
-        db = SessionLocal()
     kelas = Kelas(nama_kelas=nama_kelas, sekolah=sekolah)
     db.add(kelas)
     db.commit()
     db.refresh(kelas)
-    db.close()
     return {"id": kelas.id, "nama_kelas": kelas.nama_kelas, "sekolah": kelas.sekolah}
 
 
@@ -246,16 +237,12 @@ def create_kelas(nama_kelas: str = Form(...), sekolah: str = Form(...), db: Sess
 # API Endpoints - Siswa
 # ====================
 @app.get("/api/siswa", response_model=List[SiswaSchema])
-def get_siswa(kelas_id: Optional[int] = None, db: Session = None):
+def get_siswa(kelas_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Get all siswa, optionally filtered by kelas"""
-    if db is None:
-        db = SessionLocal()
     query = db.query(Siswa)
     if kelas_id:
         query = query.filter(Siswa.kelas_id == kelas_id)
-    siswa_list = query.all()
-    db.close()
-    return siswa_list
+    return query.all()
 
 
 @app.post("/api/siswa")
@@ -264,25 +251,19 @@ def create_siswa(
     nama: str = Form(...),
     jenis_kelamin: str = Form(...),
     kelas_id: int = Form(...),
-    db: Session = None
+    db: Session = Depends(get_db)
 ):
     """Create new siswa"""
-    if db is None:
-        db = SessionLocal()
     siswa = Siswa(nis=nis, nama=nama, jenis_kelamin=jenis_kelamin, kelas_id=kelas_id)
     db.add(siswa)
     db.commit()
     db.refresh(siswa)
-    db.close()
     return {"nis": siswa.nis, "nama": siswa.nama, "jenis_kelamin": siswa.jenis_kelamin, "kelas_id": siswa.kelas_id}
 
 
 @app.post("/api/siswa/import")
-async def import_siswa(file: UploadFile = File(...), kelas_id: int = Form(...), db: Session = None):
+async def import_siswa(file: UploadFile = File(...), kelas_id: int = Form(...), db: Session = Depends(get_db)):
     """Import siswa from CSV file (NIS, Nama, Jenis_Kelamin)"""
-    if db is None:
-        db = SessionLocal()
-    
     try:
         contents = await file.read()
         df = pd.read_csv(io.BytesIO(contents))
@@ -309,7 +290,6 @@ async def import_siswa(file: UploadFile = File(...), kelas_id: int = Form(...), 
                 errors.append(f"Row {index + 1}: {str(e)}")
         
         db.commit()
-        db.close()
         
         return {
             "status": "success",
@@ -317,7 +297,6 @@ async def import_siswa(file: UploadFile = File(...), kelas_id: int = Form(...), 
             "errors": errors
         }
     except Exception as e:
-        db.close()
         raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
 
 
@@ -325,32 +304,25 @@ async def import_siswa(file: UploadFile = File(...), kelas_id: int = Form(...), 
 # API Endpoints - Aktivitas Nilai
 # ====================
 @app.get("/api/aktivitas-nilai", response_model=List[Aktivitas_NilaiSchema])
-def get_aktivitas_nilai(kelas_id: Optional[int] = None, db: Session = None):
+def get_aktivitas_nilai(kelas_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Get all aktivitas nilai"""
-    if db is None:
-        db = SessionLocal()
     query = db.query(Aktivitas_Nilai)
     if kelas_id:
         query = query.filter(Aktivitas_Nilai.kelas_id == kelas_id)
-    aktivitas = query.all()
-    db.close()
-    return aktivitas
+    return query.all()
 
 
 @app.post("/api/aktivitas-nilai")
 def create_aktivitas_nilai(
     nama_aktivitas: str = Form(...),
     kelas_id: int = Form(...),
-    db: Session = None
+    db: Session = Depends(get_db)
 ):
     """Create new aktivitas nilai"""
-    if db is None:
-        db = SessionLocal()
     aktivitas = Aktivitas_Nilai(nama_aktivitas=nama_aktivitas, kelas_id=kelas_id, tanggal=datetime.utcnow())
     db.add(aktivitas)
     db.commit()
     db.refresh(aktivitas)
-    db.close()
     return {"id": aktivitas.id, "nama_aktivitas": aktivitas.nama_aktivitas, "kelas_id": aktivitas.kelas_id}
 
 
@@ -363,12 +335,9 @@ def create_detail_nilai(
     siswa_nis: str = Form(...),
     nilai: float = Form(...),
     catatan: Optional[str] = Form(None),
-    db: Session = None
+    db: Session = Depends(get_db)
 ):
     """Create/Update detail nilai"""
-    if db is None:
-        db = SessionLocal()
-    
     existing = db.query(Detail_Nilai).filter(
         Detail_Nilai.aktivitas_id == aktivitas_id,
         Detail_Nilai.siswa_nis == siswa_nis
@@ -387,41 +356,30 @@ def create_detail_nilai(
         db.add(detail)
     
     db.commit()
-    db.close()
     return {"status": "success"}
 
 
 @app.get("/api/detail-nilai/{aktivitas_id}")
-def get_detail_nilai(aktivitas_id: int, db: Session = None):
+def get_detail_nilai(aktivitas_id: int, db: Session = Depends(get_db)):
     """Get detail nilai by aktivitas"""
-    if db is None:
-        db = SessionLocal()
-    details = db.query(Detail_Nilai).filter(Detail_Nilai.aktivitas_id == aktivitas_id).all()
-    db.close()
-    return details
+    return db.query(Detail_Nilai).filter(Detail_Nilai.aktivitas_id == aktivitas_id).all()
 
 
 # ====================
 # API Endpoints - Absensi
 # ====================
 @app.get("/api/absensi", response_model=List[AbsensiSchema])
-def get_absensi(kelas_id: Optional[int] = None, db: Session = None):
+def get_absensi(kelas_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Get all absensi"""
-    if db is None:
-        db = SessionLocal()
     query = db.query(Absensi)
     if kelas_id:
         query = query.filter(Absensi.kelas_id == kelas_id)
-    absensi_list = query.all()
-    db.close()
-    return absensi_list
+    return query.all()
 
 
 @app.post("/api/absensi")
-def create_absensi(kelas_id: int = Form(...), db: Session = None):
+def create_absensi(kelas_id: int = Form(...), db: Session = Depends(get_db)):
     """Create new absensi record"""
-    if db is None:
-        db = SessionLocal()
     absensi = Absensi(kelas_id=kelas_id, tanggal=datetime.utcnow())
     db.add(absensi)
     db.commit()
@@ -439,7 +397,6 @@ def create_absensi(kelas_id: int = Form(...), db: Session = None):
         db.add(detail)
     
     db.commit()
-    db.close()
     return {"id": absensi.id, "kelas_id": absensi.kelas_id}
 
 
@@ -447,34 +404,25 @@ def create_absensi(kelas_id: int = Form(...), db: Session = None):
 # API Endpoints - Detail Absensi
 # ====================
 @app.get("/api/detail-absensi/{absensi_id}")
-def get_detail_absensi(absensi_id: int, db: Session = None):
+def get_detail_absensi(absensi_id: int, db: Session = Depends(get_db)):
     """Get detail absensi by absensi ID"""
-    if db is None:
-        db = SessionLocal()
-    details = db.query(Detail_Absensi).filter(Detail_Absensi.absensi_id == absensi_id).all()
-    db.close()
-    return details
+    return db.query(Detail_Absensi).filter(Detail_Absensi.absensi_id == absensi_id).all()
 
 
 @app.put("/api/detail-absensi/{detail_id}")
 def update_detail_absensi(
     detail_id: int,
     status: str = Form(...),
-    db: Session = None
+    db: Session = Depends(get_db)
 ):
     """Update detail absensi status"""
-    if db is None:
-        db = SessionLocal()
-    
     detail = db.query(Detail_Absensi).filter(Detail_Absensi.id == detail_id).first()
     if not detail:
-        db.close()
         raise HTTPException(status_code=404, detail="Detail absensi tidak ditemukan")
     
     detail.status = status
     detail.updated_at = datetime.utcnow()
     db.commit()
-    db.close()
     return {"status": "success"}
 
 
