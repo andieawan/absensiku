@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensiku - Manajemen Absensi & Nilai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .main-content {
+            padding-bottom: 80px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 40;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #6b7280;
+            text-decoration: none;
+        }
+        
+        .nav-item.active {
+            color: #2563eb;
+        }
+        
+        .nav-item:hover {
+            color: #2563eb;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 12px 12px;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px 20px 20px;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            transition: all 0.3s;
+            z-index: 30;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.6);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 0 20px 16px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .siswa-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            margin: 0 20px 8px 20px;
+            border-radius: 8px;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .siswa-info {
+            flex: 1;
+        }
+        
+        .siswa-nis {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .siswa-nama {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-hadir {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-alfa {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+        
+        .status-izin {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-sakit {
+            background: #fce7f3;
+            color: #831843;
+        }
+        
+        .input-group {
+            margin: 0 20px 16px 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            margin: 20px;
+        }
+        
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            margin: 0 20px 20px 0;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .nilai-item {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            margin: 0 20px 8px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nilai-info {
+            flex: 1;
+        }
+        
+        .nilai-siswa-nama {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+        }
+        
+        .nilai-nis {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .nilai-score {
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .nilai-score.remedial {
+            color: #dc2626;
+        }
+        
+        .nilai-score.normal {
+            color: #059669;
+        }
+        
+        .remedial-label {
+            display: inline-block;
+            background: #fee2e2;
+            color: #7f1d1d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border-left: 4px solid #dc2626;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .activity-card {
+            padding: 16px;
+            background: white;
+            margin: 0 20px 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .activity-date {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 40px;
+        }
+        
+        .profile-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .profile-info-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .profile-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .profile-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Beranda Page -->
+        <div id="page-beranda" class="page active">
+            <div class="header">
+                <h1>Absensiku</h1>
+                <p>Manajemen Absensi & Nilai Sekolah</p>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="tab-sekolah">Sekolah</button>
+                <button class="tab-btn" data-tab="tab-kelas">Kelas</button>
+            </div>
+            
+            <!-- Tab Sekolah -->
+            <div id="tab-sekolah" class="tab-content">
+                <div class="card">
+                    <h3 class="font-bold text-lg mb-2">SMKIBU</h3>
+                    <p class="text-sm text-gray-600 mb-4">Sekolah Menengah Kejuruan Ibu</p>
+                    <div id="sekolah-stats" class="grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <div id="total-kelas" class="text-2xl font-bold text-blue-600">0</div>
+                            <p class="text-xs text-gray-600 mt-1">Kelas</p>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <div id="total-siswa" class="text-2xl font-bold text-green-600">0</div>
+                            <p class="text-xs text-gray-600 mt-1">Siswa</p>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded-lg">
+                            <div id="total-aktivitas" class="text-2xl font-bold text-purple-600">0</div>
+                            <p class="text-xs text-gray-600 mt-1">Aktivitas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Kelas -->
+            <div id="tab-kelas" class="tab-content hidden">
+                <div id="kelas-list"></div>
+            </div>
+        </div>
+        
+        <!-- Absensi Page -->
+        <div id="page-absensi" class="page">
+            <div class="header">
+                <h1>Absensi</h1>
+                <p>Kelola data kehadiran siswa</p>
+            </div>
+            
+            <div id="absensi-list"></div>
+        </div>
+        
+        <!-- Nilai Page -->
+        <div id="page-nilai" class="page">
+            <div class="header">
+                <h1>Nilai</h1>
+                <p>Kelola data penilaian siswa</p>
+            </div>
+            
+            <div id="nilai-list"></div>
+        </div>
+        
+        <!-- Profil Page -->
+        <div id="page-profil" class="page">
+            <div class="profile-header">
+                <div class="profile-avatar">👨‍🏫</div>
+                <div class="profile-name">Guru</div>
+                <p>Aplikasi Absensiku v1.0</p>
+            </div>
+            
+            <div style="background: white; margin-top: 20px; border-radius: 12px; margin: 20px;">
+                <div class="profile-info-item">
+                    <span class="profile-label">Sekolah</span>
+                    <span class="profile-value">SMKIBU</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-label">Aplikasi</span>
+                    <span class="profile-value">Absensiku</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-label">Versi</span>
+                    <span class="profile-value">1.0.0</span>
+                </div>
+                <div class="profile-info-item">
+                    <span class="profile-label">Database</span>
+                    <span class="profile-value">SQLite</span>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3 class="font-bold text-lg mb-3">Tentang</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Aplikasi Manajemen Absensi & Nilai Sekolah Khusus Guru adalah solusi terintegrasi untuk memudahkan guru dalam mengelola data kehadiran dan nilai siswa secara efisien.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a class="nav-item active" data-page="page-beranda">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Beranda</div>
+        </a>
+        <a class="nav-item" data-page="page-absensi">
+            <div class="nav-icon">✓</div>
+            <div class="nav-label">Absensi</div>
+        </a>
+        <a class="nav-item" data-page="page-nilai">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">Nilai</div>
+        </a>
+        <a class="nav-item" data-page="page-profil">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profil</div>
+        </a>
+    </div>
+    
+    <!-- Floating Action Button -->
+    <div class="fab" id="fab-btn" title="Tambah Data">+</div>
+    
+    <!-- Modal Add/Edit -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Tambah Data</h2>
+                <button class="modal-close" id="modal-close">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ Global State ============
+        let currentPage = 'page-beranda';
+        let currentKelasId = 1;
+        let currentAbsensiId = null;
+        let currentAktivitasId = null;
+        let modalMode = 'add';
+        
+        // ============ Utility Functions ============
+        async function fetchAPI(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                showAlert(`Error: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+        
+        function showModal(title, content) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = content;
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+        
+        // ============ Page Navigation ============
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = item.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(page).classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                currentPage = page;
+                if (page === 'page-absensi') loadAbsensiList();
+                if (page === 'page-nilai') loadNilaiList();
+            });
+        });
+        
+        // ============ Tab Navigation ============
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+                document.getElementById(tabId).classList.remove('hidden');
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                if (tabId === 'tab-kelas') loadKelasTab();
+            });
+        });
+        
+        // ============ Modal Controls ============
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+        
+        // ============ FAB Button ============
+        document.getElementById('fab-btn').addEventListener('click', showAddMenu);
+        
+        function showAddMenu() {
+            const content = `
+                <div class="space-y-3">
+                    <button class="w-full btn btn-primary" onclick="showAddSiswaModal()">Tambah Siswa</button>
+                    <button class="w-full btn btn-primary" onclick="showImportSiswaModal()">Import Siswa (CSV)</button>
+                    <button class="w-full btn btn-primary" onclick="showAddAktivitasModal()">Tambah Aktivitas Nilai</button>
+                    <button class="w-full btn btn-primary" onclick="showAddAbsensiModal()">Tambah Absensi</button>
+                </div>
+            `;
+            showModal('Menu Tambah Data', content);
+        }
+        
+        // ============ Load Dashboard Data ============
+        async function loadDashboard() {
+            try {
+                const kelas = await fetchAPI(`/api/kelas`);
+                const siswa = await fetchAPI(`/api/siswa`);
+                const aktivitas = await fetchAPI(`/api/aktivitas-nilai`);
+                
+                document.getElementById('total-kelas').textContent = kelas ? kelas.length : 0;
+                document.getElementById('total-siswa').textContent = siswa ? siswa.length : 0;
+                document.getElementById('total-aktivitas').textContent = aktivitas ? aktivitas.length : 0;
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+        
+        // ============ Load Kelas Tab ============
+        async function loadKelasTab() {
+            const kelas = await fetchAPI(`/api/kelas`);
+            const container = document.getElementById('kelas-list');
+            
+            if (!kelas || kelas.length === 0) {
+                container.innerHTML = '<div class="card">Belum ada kelas</div>';
+                return;
+            }
+            
+            container.innerHTML = kelas.map(k => `
+                <div class="card" onclick="selectKelas(${k.id})">
+                    <h3 class="font-bold text-lg mb-2">${k.nama_kelas}</h3>
+                    <p class="text-sm text-gray-600 mb-3">Sekolah: ${k.sekolah}</p>
+                    <button class="btn btn-secondary btn-sm">Lihat Detail</button>
+                </div>
+            `).join('');
+        }
+        
+        function selectKelas(kelasId) {
+            currentKelasId = kelasId;
+            showAlert(`Kelas ${kelasId} dipilih`);
+        }
+        
+        // ============ Siswa Functions ============
+        function showAddSiswaModal() {
+            const content = `
+                <form onsubmit="saveSiswa(event)">
+                    <div class="input-group">
+                        <label>NIS</label>
+                        <input type="text" id="nis" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Nama</label>
+                        <input type="text" id="nama" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Jenis Kelamin</label>
+                        <select id="jenis_kelamin" required>
+                            <option value="">-- Pilih --</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            `;
+            showModal('Tambah Siswa', content);
+        }
+        
+        function showImportSiswaModal() {
+            const content = `
+                <form onsubmit="importSiswaCSV(event)">
+                    <div class="input-group">
+                        <label>Upload File CSV (NIS, Nama, Jenis_Kelamin)</label>
+                        <input type="file" id="csv-file" accept=".csv" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary">Import</button>
+                    </div>
+                </form>
+            `;
+            showModal('Import Siswa dari CSV', content);
+        }
+        
+        async function saveSiswa(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('nis', document.getElementById('nis').value);
+            formData.append('nama', document.getElementById('nama').value);
+            formData.append('jenis_kelamin', document.getElementById('jenis_kelamin').value);
+            formData.append('kelas_id', currentKelasId);
+            
+            const result = await fetchAPI(`/api/siswa`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (result) {
+                showAlert('Siswa berhasil ditambahkan');
+                closeModal();
+                loadDashboard();
+            }
+        }
+        
+        async function importSiswaCSV(event) {
+            event.preventDefault();
+            const file = document.getElementById('csv-file').files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('kelas_id', currentKelasId);
+            
+            const result = await fetchAPI(`/api/siswa/import`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (result) {
+                showAlert(`${result.imported} siswa berhasil diimport${result.errors.length > 0 ? ', dengan ' + result.errors.length + ' error' : ''}`);
+                closeModal();
+                loadDashboard();
+            }
+        }
+        
+        // ============ Aktivitas Nilai Functions ============
+        function showAddAktivitasModal() {
+            const content = `
+                <form onsubmit="saveAktivitas(event)">
+                    <div class="input-group">
+                        <label>Nama Aktivitas</label>
+                        <input type="text" id="nama_aktivitas" placeholder="Contoh: Ulangan Harian" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            `;
+            showModal('Tambah Aktivitas Nilai', content);
+        }
+        
+        async function saveAktivitas(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('nama_aktivitas', document.getElementById('nama_aktivitas').value);
+            formData.append('kelas_id', currentKelasId);
+            
+            const result = await fetchAPI(`/api/aktivitas-nilai`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (result) {
+                showAlert('Aktivitas nilai berhasil ditambahkan');
+                closeModal();
+                loadNilaiList();
+            }
+        }
+        
+        async function loadNilaiList() {
+            const aktivitas = await fetchAPI(`/api/aktivitas-nilai?kelas_id=${currentKelasId}`);
+            const container = document.getElementById('nilai-list');
+            
+            if (!aktivitas || aktivitas.length === 0) {
+                container.innerHTML = '<div class="card">Belum ada aktivitas nilai</div>';
+                return;
+            }
+            
+            container.innerHTML = aktivitas.map(a => `
+                <div class="activity-card">
+                    <div class="activity-title">${a.nama_aktivitas}</div>
+                    <div class="activity-date">${formatDate(a.tanggal)}</div>
+                    <button class="btn btn-secondary btn-sm mt-3" onclick="showNilaiDetailModal(${a.id})">Lihat/Edit Nilai</button>
+                </div>
+            `).join('');
+        }
+        
+        async function showNilaiDetailModal(aktivitasId) {
+            currentAktivitasId = aktivitasId;
+            const siswa = await fetchAPI(`/api/siswa?kelas_id=${currentKelasId}`);
+            const nilaiDetails = await fetchAPI(`/api/detail-nilai/${aktivitasId}`);
+            
+            const nilaiMap = {};
+            if (nilaiDetails) {
+                nilaiDetails.forEach(n => {
+                    nilaiMap[n.siswa_nis] = n.nilai;
+                });
+            }
+            
+            let content = '<div class="space-y-3">';
+            
+            if (siswa && siswa.length > 0) {
+                siswa.forEach(s => {
+                    const nilai = nilaiMap[s.nis] || '';
+                    const isRemedial = nilai && nilai < 75;
+                    
+                    content += `
+                        <div class="input-group">
+                            <label>${s.nama} (${s.nis})</label>
+                            <input type="number" class="nilai-input" data-nis="${s.nis}" data-nama="${s.nama}" min="0" max="100" value="${nilai}" step="0.5">
+                            ${isRemedial ? '<span class="remedial-label">Remedial</span>' : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                content += '<p class="text-center text-gray-600">Belum ada siswa</p>';
+            }
+            
+            content += `
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAllNilai()">Simpan Semua</button>
+                </div>
+            `;
+            
+            showModal('Input Nilai - Aktivitas ID ' + aktivitasId, content);
+        }
+        
+        async function saveAllNilai() {
+            const inputs = document.querySelectorAll('.nilai-input');
+            let savedCount = 0;
+            
+            for (const input of inputs) {
+                if (input.value) {
+                    const formData = new FormData();
+                    formData.append('aktivitas_id', currentAktivitasId);
+                    formData.append('siswa_nis', input.dataset.nis);
+                    formData.append('nilai', parseFloat(input.value));
+                    
+                    const result = await fetchAPI(`/api/detail-nilai`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (result) savedCount++;
+                }
+            }
+            
+            showAlert(`${savedCount} nilai berhasil disimpan`);
+            closeModal();
+            loadNilaiList();
+        }
+        
+        // ============ Absensi Functions ============
+        function showAddAbsensiModal() {
+            const content = `
+                <p class="text-sm text-gray-600 mb-4">Buat record absensi baru untuk kelas. Sistem akan secara otomatis membuat daftar siswa dengan status "Hadir".</p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="createAbsensi()">Buat Absensi</button>
+                </div>
+            `;
+            showModal('Tambah Absensi Baru', content);
+        }
+        
+        async function createAbsensi() {
+            const formData = new FormData();
+            formData.append('kelas_id', currentKelasId);
+            
+            const result = await fetchAPI(`/api/absensi`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (result) {
+                showAlert('Absensi baru berhasil dibuat');
+                closeModal();
+                loadAbsensiList();
+            }
+        }
+        
+        async function loadAbsensiList() {
+            const absensi = await fetchAPI(`/api/absensi?kelas_id=${currentKelasId}`);
+            const container = document.getElementById('absensi-list');
+            
+            if (!absensi || absensi.length === 0) {
+                container.innerHTML = '<div class="card">Belum ada data absensi</div>';
+                return;
+            }
+            
+            container.innerHTML = absensi.map(a => `
+                <div class="activity-card">
+                    <div class="activity-title">Absensi ${formatDate(a.tanggal)}</div>
+                    <button class="btn btn-secondary btn-sm mt-3" onclick="showAbsensiDetailModal(${a.id})">Input Absensi</button>
+                </div>
+            `).join('');
+        }
+        
+        async function showAbsensiDetailModal(absensiId) {
+            currentAbsensiId = absensiId;
+            const details = await fetchAPI(`/api/detail-absensi/${absensiId}`);
+            
+            let content = '<div class="space-y-2 mb-4">';
+            content += '<button class="w-full btn btn-secondary" onclick="setSemuaHadir()">✓ Set Semua Hadir</button>';
+            content += '</div><div class="space-y-3">';
+            
+            if (details && details.length > 0) {
+                details.forEach(d => {
+                    content += `
+                        <div class="siswa-item">
+                            <div class="siswa-info flex-1">
+                                <div class="siswa-nama">${d.siswa_nis}</div>
+                                <div class="siswa-nis">Updated: ${new Date(d.updated_at).toLocaleTimeString('id-ID')}</div>
+                            </div>
+                            <select class="status-select" data-detail-id="${d.id}" onchange="updateAbsensiStatus(${d.id}, this.value)">
+                                <option value="Hadir" ${d.status === 'Hadir' ? 'selected' : ''}>Hadir</option>
+                                <option value="Alfa" ${d.status === 'Alfa' ? 'selected' : ''}>Alfa</option>
+                                <option value="Izin" ${d.status === 'Izin' ? 'selected' : ''}>Izin</option>
+                                <option value="Sakit" ${d.status === 'Sakit' ? 'selected' : ''}>Sakit</option>
+                            </select>
+                        </div>
+                    `;
+                });
+            } else {
+                content += '<p class="text-center text-gray-600">Belum ada data absensi</p>';
+            }
+            
+            content += `
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Tutup</button>
+                </div>
+            `;
+            
+            showModal('Input Absensi', content);
+        }
+        
+        function setSemuaHadir() {
+            const selects = document.querySelectorAll('.status-select');
+            selects.forEach(select => {
+                select.value = 'Hadir';
+                updateAbsensiStatus(select.dataset.detailId, 'Hadir');
+            });
+            showAlert('Semua siswa telah diset Hadir');
+        }
+        
+        async function updateAbsensiStatus(detailId, status) {
+            const formData = new FormData();
+            formData.append('status', status);
+            
+            await fetchAPI(`/api/detail-absensi/${detailId}`, {
+                method: 'PUT',
+                body: formData
+            });
+        }
+        
+        // ============ Initialize ============
+        loadDashboard();
+    </script>
+</body>
+</html>
